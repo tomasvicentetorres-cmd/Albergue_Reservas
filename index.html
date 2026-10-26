@@ -61,7 +61,13 @@ header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
 .dia.lleno{background:var(--lleno);color:var(--lleno-ink);border-color:transparent}
 .dia.fuera{background:var(--fuera);color:var(--muted);opacity:.55;cursor:default}
 .dia.fuera .n{border-bottom:0}
-.dia.hoyd .n{text-decoration:underline;text-underline-offset:3px}
+.dia.hoyd{border:3px solid var(--brand)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 25%,transparent)}
+.dia.hoyd .n{background:var(--brand);color:#fff;display:flex;justify-content:space-between;align-items:center}
+.dia.hoyd .n::after{content:"HOY";font-size:.62rem;font-weight:700;letter-spacing:.06em;opacity:.9}
+@media (prefers-color-scheme: dark){.dia.hoyd .n{color:#11161d}}
+@media (max-width:700px){.dia.hoyd .n::after{display:none}}
+.detalle .tw{overflow-x:auto}
+.detalle td a{color:inherit}
 .detalle{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
 .detalle h2{margin:0 0 6px;font-size:1.05rem}
 .detalle h2::first-letter{text-transform:uppercase}
@@ -123,10 +129,11 @@ const MOSTRAR_GRUPOS = true;   // false = solo se ven colores y plazas libres, s
 const ACTUALIZAR_MIN = 5;      // recarga automática cada N minutos
 /* =================================================== */
 
-const DEMO = `Grupo,Ingreso,Egreso,Plazas
-Club Atlético X,13/11/2026,15/11/2026,24
-Escuela de Vóley General Pico,14/11/2026,16/11/2026,40
-Selección Sub-14 de Básquet,20/11/2026,22/11/2026,18`;
+const DEMO = `Grupo,Ingreso,Egreso,Plazas,Responsable,Teléfono
+Club Atlético X,13/11/2026,15/11/2026,24,Juan Pérez,2954 000000
+Escuela de Vóley General Pico,14/11/2026,16/11/2026,40,María Gómez,2302 000000
+Selección Sub-14 de Básquet,20/11/2026,22/11/2026,18,Carlos Díaz,2954 111111
+Club Local,26/10/2026,28/10/2026,10,Ana López,2954 222222`;
 
 const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const DIAS=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
@@ -155,7 +162,7 @@ function parseFecha(s){
 function cargarDatos(texto){
   const rows=parseCSV(texto).filter(r=>r.some(x=>x.trim()!==""));
   if(rows.length && !parseFecha(rows[0][1])) rows.shift(); // encabezado
-  reservas=rows.map(r=>({grupo:(r[0]||"").trim(),ing:parseFecha(r[1]),egr:parseFecha(r[2]),plazas:parseFloat((r[3]||"0").replace(",","."))||0}))
+  reservas=rows.map(r=>({grupo:(r[0]||"").trim(),ing:parseFecha(r[1]),egr:parseFecha(r[2]),plazas:parseFloat((r[3]||"0").replace(",","."))||0,resp:(r[4]||"").trim(),tel:(r[5]||"").trim()}))
                .filter(r=>r.ing&&r.egr&&r.egr>r.ing);
 }
 function enDia(d){return reservas.filter(r=>r.ing<=d&&r.egr>d);}
@@ -190,7 +197,7 @@ function detalle(d){
   const fmt=x=>x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit"});
   el.hidden=false;
   el.innerHTML=`<h2>${f}</h2><div><span class="big">${Math.max(lib,0)}</span> de ${CAPACIDAD} plazas libres · ${occ} ocupadas</div>`+
-    (MOSTRAR_GRUPOS&&rs.length?`<table><tr><th>Grupo</th><th>Ingreso</th><th>Egreso</th><th>Plazas</th></tr>${rs.map(r=>`<tr><td>${esc(r.grupo)}</td><td>${fmt(r.ing)}</td><td>${fmt(r.egr)}</td><td>${r.plazas}</td></tr>`).join("")}</table>`:
+    (MOSTRAR_GRUPOS&&rs.length?`<div class="tw"><table><tr><th>Grupo</th><th>Ingreso</th><th>Egreso</th><th>Responsable</th><th>Teléfono</th><th>Plazas</th></tr>${rs.map(r=>`<tr><td>${esc(r.grupo)}</td><td>${fmt(r.ing)}</td><td>${fmt(r.egr)}</td><td>${esc(r.resp)}</td><td>${r.tel?`<a href="tel:${esc(r.tel.replace(/[^\d+]/g,""))}">${esc(r.tel)}</a>`:""}</td><td>${r.plazas}</td></tr>`).join("")}</table></div>`:
      (rs.length?"":`<p style="color:var(--muted);margin:8px 0 0">Sin reservas para este día.</p>`));
 }
 async function actualizar(){
