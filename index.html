@@ -129,7 +129,7 @@ header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
 /* ================== CONFIGURACIÓN ================== */
 // Link CSV de la hoja "Publico" (Archivo → Compartir → Publicar en la web → hoja Publico → CSV).
 // Si lo dejás vacío, la página muestra datos de ejemplo.
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNhGX7WGq8CBI1EDWfrQVf7M-2qMaNvxKqRrkxyYwVEEcNdkllyXz4g4pw6G1DcOvzBnHe_92OrSrr/pub?gid=611181230&single=true&output=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d80A_jkbILj3OhJwYq2uiGwIFnnA-e9ET7WajbgkZS7_m_kOIxyzN6dPYi0CzEAwCJLOkL3lucdW/pub?gid=154543677&single=true&output=csv";
 const CAPACIDAD = 64;          // plazas totales del albergue
 const MOSTRAR_GRUPOS = true;   // false = solo se ven colores y plazas libres, sin nombres
 const ACTUALIZAR_MIN = 5;      // recarga automática cada N minutos
@@ -139,7 +139,8 @@ const DEMO = `Grupo,Ingreso,Egreso,Plazas,Responsable,Teléfono
 Club Atlético X,13/11/2026,15/11/2026,24,Juan Pérez,2954 000000
 Escuela de Vóley General Pico,14/11/2026,16/11/2026,40,María Gómez,2302 000000
 Selección Sub-14 de Básquet,20/11/2026,22/11/2026,18,Carlos Díaz,2954 111111
-Club Local,26/10/2026,28/10/2026,10,Ana López,2954 222222`;
+Club Local,26/10/2026,28/10/2026,10,Ana López,2954 222222
+Delegación de paso,03/11/2026,03/11/2026,30,Pedro Ruiz,2954 333333`;
 
 const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const DIAS=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
@@ -169,9 +170,10 @@ function cargarDatos(texto){
   const rows=parseCSV(texto).filter(r=>r.some(x=>x.trim()!==""));
   if(rows.length && !parseFecha(rows[0][1])) rows.shift(); // encabezado
   reservas=rows.map(r=>({grupo:(r[0]||"").trim(),ing:parseFecha(r[1]),egr:parseFecha(r[2]),plazas:parseFloat((r[3]||"0").replace(",","."))||0,resp:(r[4]||"").trim(),tel:(r[5]||"").trim()}))
-               .filter(r=>r.ing&&r.egr&&r.egr>r.ing);
+               .filter(r=>r.ing&&r.egr&&r.egr>=r.ing);
 }
-function enDia(d){return reservas.filter(r=>r.ing<=d&&r.egr>d);}
+// Ocupa la noche/día si ingreso <= día < egreso. Si entra y sale el mismo día, ocupa ese día.
+function enDia(d){return reservas.filter(r=>r.ing<=d&&(r.egr>d||(+r.egr===+r.ing&&+d===+r.ing)));}
 const mismoDia=(a,b)=>a&&b&&a.getFullYear()==b.getFullYear()&&a.getMonth()==b.getMonth()&&a.getDate()==b.getDate();
 const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
