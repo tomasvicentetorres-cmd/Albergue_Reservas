@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Albergue Deportivo – Disponibilidad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================== CONFIGURACIÓN ================== */
+/* (ver bloque <script> más abajo: CSV_URL, CAPACIDAD, MOSTRAR_GRUPOS) */
+
+:root{
+  --bg:#f4f6f9; --card:#fff; --ink:#1b2430; --muted:#6b7684; --line:#e3e7ec;
+  --brand:#1f4e78;
+  --libre:#d7f3df; --libre-ink:#1d6b36;
+  --parcial:#fff1c2; --parcial-ink:#8a6200;
+  --lleno:#ffd6db; --lleno-ink:#a3202f;
+  --fuera:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#11161d; --card:#1a212b; --ink:#e7ecf2; --muted:#9aa5b2; --line:#2a3340;
+    --brand:#7fb2e5;
+    --libre:#163a24; --libre-ink:#8fe0a8;
+    --parcial:#3d3210; --parcial-ink:#f2cf63;
+    --lleno:#45181e; --lleno-ink:#ff9aa6;
+    --fuera:#151b23;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Arial,sans-serif;font-size:15px}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 40px}
+header h1{margin:0;font-size:1.45rem;color:var(--brand)}
+header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 12px;flex-wrap:wrap}
+.nav{display:flex;align-items:center;gap:8px}
+.nav button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;width:38px;height:38px;font-size:1.1rem;cursor:pointer}
+.nav button:hover{border-color:var(--brand)}
+.mes{font-size:1.2rem;font-weight:700;min-width:190px;text-align:center;text-transform:capitalize}
+.hoy{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:0 12px;height:38px;cursor:pointer;font:inherit;font-size:.9rem}
+.leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+.leyenda i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.dow{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;text-align:center;padding:4px 0}
+.dia{background:var(--card);border:1px solid var(--line);border-radius:10px;min-height:118px;padding:8px;display:flex;flex-direction:column;gap:4px;cursor:pointer;text-align:left;font:inherit;color:inherit;transition:transform .08s}
+.dia:hover{transform:translateY(-1px)}
+.dia.sel{outline:2px solid var(--brand);outline-offset:1px}
+.dia .n{font-weight:700;font-size:1rem}
+.dia .lib{font-weight:600;font-size:.82rem}
+.dia ul{list-style:none;margin:2px 0 0;padding:0;font-size:.74rem;line-height:1.3;overflow:hidden}
+.dia li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dia.libre{background:var(--libre);color:var(--libre-ink);border-color:transparent}
+.dia.parcial{background:var(--parcial);color:var(--parcial-ink);border-color:transparent}
+.dia.lleno{background:var(--lleno);color:var(--lleno-ink);border-color:transparent}
+.dia.fuera{background:var(--fuera);color:var(--muted);opacity:.55;cursor:default}
+.dia.hoyd .n{text-decoration:underline;text-underline-offset:3px}
+.detalle{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.detalle h2{margin:0 0 6px;font-size:1.05rem}
+.detalle h2::first-letter{text-transform:uppercase}
+.detalle .big{font-size:1.6rem;font-weight:700}
+.detalle table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.9rem}
+.detalle td,.detalle th{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left}
+.detalle th{color:var(--muted);font-weight:600;font-size:.8rem}
+.estado{color:var(--muted);font-size:.85rem;margin-top:14px}
+.err{background:var(--lleno);color:var(--lleno-ink);padding:12px;border-radius:10px;margin-top:12px}
+@media (max-width:700px){
+  .dia{min-height:62px;padding:6px;border-radius:8px}
+  .dia ul{display:none}
+  .dia .lib{font-size:.7rem}
+  .grid{gap:4px}
+  .mes{min-width:150px;font-size:1.05rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Albergue Deportivo Municipal</h1>
+    <p>Disponibilidad de plazas · Dirección de Deportes y Juventud · Santa Rosa, La Pampa</p>
+  </header>
+
+  <div class="bar">
+    <div class="nav">
+      <button id="prev" aria-label="Mes anterior">‹</button>
+      <div class="mes" id="mes"></div>
+      <button id="next" aria-label="Mes siguiente">›</button>
+      <button class="hoy" id="hoy">Hoy</button>
+    </div>
+    <div class="leyenda">
+      <span><i style="background:var(--libre)"></i>Libre</span>
+      <span><i style="background:var(--parcial)"></i>Con ocupación</span>
+      <span><i style="background:var(--lleno)"></i>Completo</span>
+    </div>
+  </div>
+
+  <div class="grid" id="dows"></div>
+  <div class="grid" id="grid" style="margin-top:6px"></div>
+  <div class="detalle" id="detalle" hidden></div>
+  <div class="estado" id="estado">Cargando reservas…</div>
+</div>
+
+<script>
+/* ================== CONFIGURACIÓN ================== */
+// Link CSV de la hoja "Publico" (Archivo → Compartir → Publicar en la web → hoja Publico → CSV).
+// Si lo dejás vacío, la página muestra datos de ejemplo.
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNhGX7WGq8CBI1EDWfrQVf7M-2qMaNvxKqRrkxyYwVEEcNdkllyXz4g4pw6G1DcOvzBnHe_92OrSrr/pub?gid=611181230&single=true&output=csv";
+const CAPACIDAD = 64;          // plazas totales del albergue
+const MOSTRAR_GRUPOS = false;   // false = solo se ven colores y plazas libres, sin nombres
+const ACTUALIZAR_MIN = 5;      // recarga automática cada N minutos
+/* =================================================== */
+
+const DEMO = `Grupo,Ingreso,Egreso,Plazas
+Club Atlético X,13/11/2026,15/11/2026,24
+Escuela de Vóley General Pico,14/11/2026,16/11/2026,40
+Selección Sub-14 de Básquet,20/11/2026,22/11/2026,18`;
+
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const DIAS=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+let reservas=[], cur=new Date(), sel=null;
+cur=new Date(cur.getFullYear(),cur.getMonth(),1);
+
+function parseCSV(t){
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){ if(c=='"'){ if(t[i+1]=='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c=='"') q=true;
+    else if(c==','){row.push(f);f="";}
+    else if(c=='\n'||c=='\r'){ if(c=='\r'&&t[i+1]=='\n')i++; row.push(f);rows.push(row);row=[];f=""; }
+    else f+=c;
+  }
+  if(f!==""||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+function parseFecha(s){
+  s=(s||"").trim(); if(!s) return null; let m;
+  if(m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/)){let y=+m[3]; if(y<100)y+=2000; return new Date(y,+m[2]-1,+m[1]);}
+  if(m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)) return new Date(+m[1],+m[2]-1,+m[3]);
+  if(/^\d+(\.\d+)?$/.test(s)){const d=new Date(1899,11,30); d.setDate(d.getDate()+Math.floor(+s)); return d;}
+  return null;
+}
+function cargarDatos(texto){
+  const rows=parseCSV(texto).filter(r=>r.some(x=>x.trim()!==""));
+  if(rows.length && !parseFecha(rows[0][1])) rows.shift(); // encabezado
+  reservas=rows.map(r=>({grupo:(r[0]||"").trim(),ing:parseFecha(r[1]),egr:parseFecha(r[2]),plazas:parseFloat((r[3]||"0").replace(",","."))||0}))
+               .filter(r=>r.ing&&r.egr&&r.egr>r.ing);
+}
+function enDia(d){return reservas.filter(r=>r.ing<=d&&r.egr>d);}
+const mismoDia=(a,b)=>a&&b&&a.getFullYear()==b.getFullYear()&&a.getMonth()==b.getMonth()&&a.getDate()==b.getDate();
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function render(){
+  document.getElementById("mes").textContent=MESES[cur.getMonth()]+" "+cur.getFullYear();
+  const g=document.getElementById("grid"); g.innerHTML="";
+  const first=new Date(cur); const off=(first.getDay()+6)%7;
+  const start=new Date(first); start.setDate(1-off);
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const semanas=Math.ceil((off+new Date(cur.getFullYear(),cur.getMonth()+1,0).getDate())/7);
+  for(let i=0;i<semanas*7;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i);
+    const b=document.createElement("button"); b.className="dia";
+    if(d.getMonth()!==cur.getMonth()){b.classList.add("fuera");b.disabled=true;b.innerHTML=`<span class="n">${d.getDate()}</span>`;g.appendChild(b);continue;}
+    const rs=enDia(d), occ=rs.reduce((a,r)=>a+r.plazas,0), lib=CAPACIDAD-occ;
+    b.classList.add(occ>=CAPACIDAD?"lleno":occ>0?"parcial":"libre");
+    if(mismoDia(d,hoy)) b.classList.add("hoyd");
+    if(mismoDia(d,sel)) b.classList.add("sel");
+    b.innerHTML=`<span class="n">${d.getDate()}</span><span class="lib">${lib<0?"Excedido "+(-lib):lib+" libres"}</span>`+
+      (MOSTRAR_GRUPOS&&rs.length?`<ul>${rs.map(r=>`<li title="${esc(r.grupo)}">• ${esc(r.grupo)} (${r.plazas})</li>`).join("")}</ul>`:"");
+    b.onclick=()=>{sel=d;render();detalle(d);};
+    g.appendChild(b);
+  }
+  if(sel && sel.getMonth()===cur.getMonth()) detalle(sel); else document.getElementById("detalle").hidden=true;
+}
+function detalle(d){
+  const el=document.getElementById("detalle"), rs=enDia(d), occ=rs.reduce((a,r)=>a+r.plazas,0), lib=CAPACIDAD-occ;
+  const f=d.toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const fmt=x=>x.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit"});
+  el.hidden=false;
+  el.innerHTML=`<h2>${f}</h2><div><span class="big">${Math.max(lib,0)}</span> de ${CAPACIDAD} plazas libres · ${occ} ocupadas</div>`+
+    (MOSTRAR_GRUPOS&&rs.length?`<table><tr><th>Grupo</th><th>Ingreso</th><th>Egreso</th><th>Plazas</th></tr>${rs.map(r=>`<tr><td>${esc(r.grupo)}</td><td>${fmt(r.ing)}</td><td>${fmt(r.egr)}</td><td>${r.plazas}</td></tr>`).join("")}</table>`:
+     (rs.length?"":`<p style="color:var(--muted);margin:8px 0 0">Sin reservas para este día.</p>`));
+}
+async function actualizar(){
+  const est=document.getElementById("estado");
+  try{
+    let txt;
+    if(!CSV_URL){ txt=DEMO; est.textContent="Mostrando datos de EJEMPLO (falta configurar CSV_URL)."; }
+    else{
+      const r=await fetch(CSV_URL+(CSV_URL.includes("?")?"&":"?")+"t="+Date.now(),{cache:"no-store"});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      txt=await r.text();
+      est.textContent="Actualizado: "+new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
+    }
+    cargarDatos(txt); render();
+  }catch(e){
+    est.innerHTML=`<div class="err">No se pudieron cargar las reservas (${esc(String(e.message||e))}). Verificá que la hoja esté publicada como CSV.</div>`;
+    render();
+  }
+}
+document.getElementById("dows").innerHTML=DIAS.map(d=>`<div class="dow">${d}</div>`).join("");
+document.getElementById("prev").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()-1,1);render();};
+document.getElementById("next").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);render();};
+document.getElementById("hoy").onclick=()=>{const t=new Date();cur=new Date(t.getFullYear(),t.getMonth(),1);sel=null;render();};
+actualizar(); setInterval(actualizar,ACTUALIZAR_MIN*60000);
+</script>
+</body>
+</html>
