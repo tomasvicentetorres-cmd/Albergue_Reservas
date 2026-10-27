@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="es">
 <head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Albergue Deportivo – Disponibilidad</title>
@@ -127,6 +130,8 @@ header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
 
 <script>
 /* ================== CONFIGURACIÓN ================== */
+const VERSION = "auto";        // no tocar: la página detecta sola si hay una versión nueva
+const SCRIPT_ACTUAL = (document.currentScript&&document.currentScript.textContent)||"";
 // URL que devuelve la hoja "Publico" en CSV.
 // RECOMENDADO: URL /exec de la Aplicación web de Apps Script (muestra los cambios al instante).
 // El link de "Publicar en la web" también funciona, pero Google lo cachea y tarda varios minutos en reflejar cambios.
@@ -212,7 +217,26 @@ function detalle(d){
     (MOSTRAR_GRUPOS&&rs.length?`<div class="tw"><table><tr><th>Grupo</th><th>Ingreso</th><th>Egreso</th><th>Responsable</th><th>Teléfono</th><th>Plazas</th></tr>${rs.map(r=>`<tr><td>${esc(r.grupo)}</td><td>${fmt(r.ing)}</td><td>${fmt(r.egr)}</td><td>${esc(r.resp)}</td><td>${r.tel?`<a href="tel:${esc(r.tel.replace(/[^\d+]/g,""))}">${esc(r.tel)}</a>`:""}</td><td>${r.plazas}</td></tr>`).join("")}</table></div>`:
      (rs.length?"":`<p style="color:var(--muted);margin:8px 0 0">Sin reservas para este día.</p>`));
 }
+// Detecta solo si el index.html del servidor cambió (compara el código) y recarga. Sirve para iOS, Android y PC.
+const normalizar=t=>t.replace(/\r\n?/g,"\n").trim();
+async function chequearVersion(){
+  try{
+    const r=await fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"});
+    if(!r.ok) return;
+    const html=await r.text();
+    const AP="<"+"script>", CI="</"+"script>";
+    const partes=html.split(AP); if(partes.length<2) return;
+    const nuevo=partes[partes.length-1].split(CI)[0];
+    if(!SCRIPT_ACTUAL || normalizar(nuevo)===normalizar(SCRIPT_ACTUAL)) return;
+    let h=0; for(const c of html) h=(h*31+c.charCodeAt(0))|0;   // huella de la versión nueva
+    const id=(h>>>0).toString(36);
+    if(sessionStorage.getItem("alb_v")===id) return;            // ya se intentó: evita recargas en bucle
+    sessionStorage.setItem("alb_v",id);
+    location.replace(location.pathname+"?v="+id+location.hash);
+  }catch(_){}
+}
 async function actualizar(){
+  chequearVersion();
   const est=document.getElementById("estado");
   try{
     let txt;
@@ -242,6 +266,9 @@ document.getElementById("hoy").onclick=()=>{const t=new Date();cur=new Date(t.ge
 })();
 actualizar(); setInterval(actualizar,ACTUALIZAR_MIN*60000);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") actualizar(); });
+// iOS/Safari: al volver a la pestaña o a la app desde la pantalla de inicio, la página se restaura sin recargar
+window.addEventListener("pageshow",e=>{ if(e.persisted) actualizar(); });
+window.addEventListener("focus",()=>actualizar());
 </script>
 </body>
 </html>
