@@ -132,7 +132,7 @@ header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
 // El link de "Publicar en la web" también funciona, pero Google lo cachea y tarda varios minutos en reflejar cambios.
 // Si lo dejás vacío, la página muestra datos de ejemplo.
 const CSV_URL = "https://script.google.com/macros/s/AKfycbwIrtwXZ7obpuawPrDktqThwRb62_fF0h_hkM6j-YKLhbe7zq6T2RyTpjv3X_qQhlcb/exec";
-const CAPACIDAD = 64;          // plazas totales del albergue
+let CAPACIDAD = 60;            // valor por defecto; se reemplaza por la capacidad de la hoja Config
 const MOSTRAR_GRUPOS = true;   // false = solo se ven colores y plazas libres, sin nombres
 const ACTUALIZAR_MIN = 1;      // recarga automática cada N minutos
 /* =================================================== */
@@ -170,6 +170,8 @@ function parseFecha(s){
 }
 function cargarDatos(texto){
   const rows=parseCSV(texto).filter(r=>r.some(x=>x.trim()!==""));
+  const ic=rows.findIndex(r=>(r[0]||"").trim()==="__CAPACIDAD__");
+  if(ic>=0){ const n=parseFloat((rows[ic][1]||"").replace(",",".")); if(n>0) CAPACIDAD=n; rows.splice(ic,1); }
   if(rows.length && !parseFecha(rows[0][1])) rows.shift(); // encabezado
   reservas=rows.map(r=>({grupo:(r[0]||"").trim(),ing:parseFecha(r[1]),egr:parseFecha(r[2]),plazas:parseFloat((r[3]||"0").replace(",","."))||0,resp:(r[4]||"").trim(),tel:(r[5]||"").trim()}))
                .filter(r=>r.ing&&r.egr&&r.egr>=r.ing);
