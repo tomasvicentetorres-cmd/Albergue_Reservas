@@ -127,12 +127,14 @@ header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
 
 <script>
 /* ================== CONFIGURACIÓN ================== */
-// Link CSV de la hoja "Publico" (Archivo → Compartir → Publicar en la web → hoja Publico → CSV).
+// URL que devuelve la hoja "Publico" en CSV.
+// RECOMENDADO: URL /exec de la Aplicación web de Apps Script (muestra los cambios al instante).
+// El link de "Publicar en la web" también funciona, pero Google lo cachea y tarda varios minutos en reflejar cambios.
 // Si lo dejás vacío, la página muestra datos de ejemplo.
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_d80A_jkbILj3OhJwYq2uiGwIFnnA-e9ET7WajbgkZS7_m_kOIxyzN6dPYi0CzEAwCJLOkL3lucdW/pub?gid=154543677&single=true&output=csv";
+const CSV_URL = "https://script.google.com/macros/s/AKfycbwIrtwXZ7obpuawPrDktqThwRb62_fF0h_hkM6j-YKLhbe7zq6T2RyTpjv3X_qQhlcb/exec";
 const CAPACIDAD = 64;          // plazas totales del albergue
 const MOSTRAR_GRUPOS = true;   // false = solo se ven colores y plazas libres, sin nombres
-const ACTUALIZAR_MIN = 5;      // recarga automática cada N minutos
+const ACTUALIZAR_MIN = 1;      // recarga automática cada N minutos
 /* =================================================== */
 
 const DEMO = `Grupo,Ingreso,Egreso,Plazas,Responsable,Teléfono
