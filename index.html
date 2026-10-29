@@ -181,8 +181,8 @@ function cargarDatos(texto){
   reservas=rows.map(r=>({grupo:(r[0]||"").trim(),ing:parseFecha(r[1]),egr:parseFecha(r[2]),plazas:parseFloat((r[3]||"0").replace(",","."))||0,resp:(r[4]||"").trim(),tel:(r[5]||"").trim()}))
                .filter(r=>r.ing&&r.egr&&r.egr>=r.ing);
 }
-// Ocupa la noche/día si ingreso <= día < egreso. Si entra y sale el mismo día, ocupa ese día.
-function enDia(d){return reservas.filter(r=>r.ing<=d&&(r.egr>d||(+r.egr===+r.ing&&+d===+r.ing)));}
+// Ocupa desde el día de ingreso hasta el día de egreso, ambos incluidos.
+function enDia(d){return reservas.filter(r=>r.ing<=d&&d<=r.egr);}
 const mismoDia=(a,b)=>a&&b&&a.getFullYear()==b.getFullYear()&&a.getMonth()==b.getMonth()&&a.getDate()==b.getDate();
 const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
